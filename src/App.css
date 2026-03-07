@@ -1,0 +1,1064 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.app {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* --- NavBar --- */
+
+.navbar {
+  background: linear-gradient(135deg, #1a1a2e 0%, #2d3561 100%);
+  padding: 0 20px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1001;
+}
+
+.nav-brand {
+  color: white;
+  font-size: 16px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+
+.nav-link {
+  color: rgba(255, 255, 255, 0.85);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.nav-link:hover { color: white; }
+
+.nav-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+/* --- HomePage --- */
+
+.home-page {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+.map-title {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  color: #1a1a2e;
+  font-size: 20px;
+  font-weight: 700;
+  pointer-events: none;
+}
+
+.header-subtitle {
+  color: rgba(26, 26, 46, 0.6);
+  font-size: 12px;
+  font-weight: 400;
+}
+
+/* --- Top Bar --- */
+
+.top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #1a1a2e 0%, #2d3561 100%);
+  z-index: 1000;
+}
+
+/* --- Location Picker --- */
+
+.location-picker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.location-label {
+  color: #1a1a2e;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.location-form {
+  display: flex;
+  gap: 4px;
+}
+
+.location-input {
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1.5px solid rgba(26, 26, 46, 0.2);
+  background: rgba(255, 255, 255, 0.7);
+  font-size: 13px;
+  font-weight: 600;
+  color: #1a1a2e;
+  width: 140px;
+}
+
+.location-input::placeholder {
+  color: rgba(26, 26, 46, 0.4);
+}
+
+.location-btn {
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1.5px solid rgba(26, 26, 46, 0.2);
+  background: rgba(255, 255, 255, 0.7);
+  font-size: 13px;
+  font-weight: 600;
+  color: #1a1a2e;
+  cursor: pointer;
+}
+
+.location-btn:hover {
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.location-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.location-resolved {
+  color: rgba(26, 26, 46, 0.6);
+  font-size: 11px;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.location-error {
+  color: #ff8a80;
+  font-size: 11px;
+}
+
+.filter-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 1000;
+}
+
+.filter-btn {
+  padding: 8px 14px;
+  border-radius: 20px;
+  border: 1.5px solid rgba(26, 26, 46, 0.15);
+  background: rgba(255, 255, 255, 0.75);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+  color: #555;
+  text-align: left;
+}
+
+.filter-btn.ikon { color: #1a1a4e; }
+.filter-btn.epic { color: #f26522; }
+.filter-btn.indie { color: #7a8a96; }
+.filter-btn:hover { border-color: #aaa; }
+
+.filter-btn.active {
+  background: #4a90d9;
+  color: white;
+  border-color: #4a90d9;
+}
+
+.filter-btn.ikon.active {
+  background: #1a1a4e;
+  border-color: #1a1a4e;
+  color: white;
+}
+
+.filter-btn.epic.active {
+  background: #f26522;
+  border-color: #f26522;
+  color: white;
+}
+
+.filter-btn.indie.active {
+  background: #7a8a96;
+  border-color: #7a8a96;
+  color: white;
+}
+
+.map-container {
+  flex: 1;
+  position: relative;
+  min-height: 0;
+}
+
+.map-container .leaflet-tile-pane {
+  filter: saturate(0.25) brightness(1.05) hue-rotate(180deg);
+}
+
+.plan-trip-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 1000;
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: 1.5px solid rgba(26, 26, 46, 0.15);
+  background: rgba(255, 255, 255, 0.85);
+  font-size: 13px;
+  font-weight: 600;
+  color: #1a1a2e;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+.plan-trip-btn:hover {
+  background: white;
+  border-color: #aaa;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.mountain-count {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+  font-size: 13px;
+  color: #555;
+  z-index: 1000;
+}
+
+.mountain-count strong { color: #1a1a2e; }
+
+/* --- Login Page --- */
+
+.login-page {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f6f8;
+}
+
+.login-card {
+  background: white;
+  border-radius: 12px;
+  padding: 32px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+}
+
+.login-card h2 {
+  margin-bottom: 20px;
+  color: #1a1a2e;
+}
+
+.login-card input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1.5px solid #ddd;
+  border-radius: 8px;
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+
+.login-error {
+  background: #fff0f0;
+  color: #d32f2f;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+
+.login-divider {
+  text-align: center;
+  margin: 16px 0;
+  color: #999;
+  font-size: 13px;
+  position: relative;
+}
+
+.login-divider::before,
+.login-divider::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 40%;
+  height: 1px;
+  background: #ddd;
+}
+
+.login-divider::before { left: 0; }
+.login-divider::after { right: 0; }
+
+.login-toggle {
+  text-align: center;
+  margin-top: 16px;
+  font-size: 13px;
+  color: #666;
+}
+
+.login-toggle button {
+  background: none;
+  border: none;
+  color: #1a1a4e;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+/* --- Buttons --- */
+
+.btn-primary {
+  width: 100%;
+  padding: 10px;
+  background: #1a1a2e;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-primary:hover { background: #2d3561; }
+.btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.btn-google {
+  width: 100%;
+  padding: 10px;
+  background: white;
+  color: #333;
+  border: 1.5px solid #ddd;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-google:hover { background: #f5f5f5; }
+
+.btn-secondary {
+  padding: 8px 16px;
+  background: white;
+  color: #1a1a2e;
+  border: 1.5px solid #1a1a2e;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-secondary:hover { background: #f5f6f8; }
+
+.btn-danger {
+  color: #d32f2f;
+  border-color: #d32f2f;
+}
+
+/* --- Modal --- */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  width: 100%;
+  max-width: 480px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-content h3 {
+  margin-bottom: 16px;
+  color: #1a1a2e;
+}
+
+.modal-content label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #555;
+  margin-bottom: 12px;
+}
+
+.modal-content input,
+.modal-content textarea,
+.modal-content select {
+  display: block;
+  width: 100%;
+  padding: 8px 10px;
+  border: 1.5px solid #ddd;
+  border-radius: 8px;
+  font-size: 14px;
+  margin-top: 4px;
+  font-family: inherit;
+}
+
+.modal-content textarea { resize: vertical; }
+
+.form-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+.form-actions button {
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1.5px solid #ddd;
+  background: white;
+}
+
+.form-actions .btn-primary {
+  width: auto;
+}
+
+/* --- Profile Page --- */
+
+.profile-page {
+  flex: 1;
+  overflow-y: auto;
+  background: #f5f6f8;
+  padding: 24px;
+}
+
+.loading-text {
+  text-align: center;
+  color: #888;
+  margin-top: 80px;
+}
+
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: white;
+  padding: 24px;
+  border-radius: 12px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  margin-bottom: 24px;
+}
+
+.profile-photo {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.profile-photo.placeholder {
+  background: #1a1a2e;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.profile-info { flex: 1; }
+
+.profile-info h2 {
+  color: #1a1a2e;
+  font-size: 20px;
+}
+
+.profile-bio {
+  color: #666;
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+.profile-meta {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+  font-size: 13px;
+  color: #888;
+}
+
+.pass-badge {
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.pass-badge.ikon { background: #e8e8f4; color: #1a1a4e; }
+.pass-badge.epic { background: #fde8dc; color: #f26522; }
+.pass-badge.independent { background: #e8ecef; color: #7a8a96; }
+
+.rider-badge {
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  background: #e3f2fd;
+  color: #1565c0;
+}
+
+/* --- Posts --- */
+
+.profile-posts {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+.posts-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.posts-header h3 { color: #1a1a2e; }
+
+.posts-header .btn-primary {
+  width: auto;
+  padding: 8px 16px;
+}
+
+.empty-state {
+  text-align: center;
+  color: #999;
+  padding: 32px 0;
+  font-size: 14px;
+}
+
+.ski-day-card {
+  border: 1px solid #eee;
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+.ski-day-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.ski-day-header h4 {
+  color: #1a1a2e;
+  font-size: 16px;
+}
+
+.ski-day-date {
+  color: #888;
+  font-size: 13px;
+}
+
+.ski-day-notes {
+  color: #555;
+  font-size: 14px;
+  margin-top: 8px;
+  line-height: 1.5;
+}
+
+.ski-day-photos {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  overflow-x: auto;
+}
+
+.ski-day-photos img {
+  width: 120px;
+  height: 90px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.ski-day-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.ski-day-actions button {
+  padding: 6px 12px;
+  border: 1.5px solid #ddd;
+  border-radius: 6px;
+  background: white;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* --- Star Rating --- */
+
+.star-rating {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.star {
+  font-size: 20px;
+  color: #ddd;
+}
+
+.star.filled { color: #f5a623; }
+.star.interactive { cursor: pointer; }
+
+/* --- Mountains Page --- */
+
+.mountains-page {
+  flex: 1;
+  overflow-y: auto;
+  background: #f5f6f8;
+  padding: 24px;
+  max-width: 800px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.mountains-page h1 {
+  color: #1a1a2e;
+  font-size: 24px;
+  margin-bottom: 24px;
+}
+
+.state-group {
+  margin-bottom: 24px;
+}
+
+.state-group h2 {
+  color: #1a1a2e;
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.mountain-list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-radius: 8px;
+  text-decoration: none;
+  color: inherit;
+  transition: background 0.15s;
+}
+
+.mountain-list-item:hover {
+  background: white;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+.mountain-list-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a1a2e;
+}
+
+.mountain-list-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: #888;
+}
+
+.mountain-list-size {
+  text-transform: capitalize;
+}
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 12px;
+  color: #2d3561;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.back-link:hover {
+  text-decoration: underline;
+}
+
+.mountain-info-subtitle {
+  color: #666;
+  font-size: 15px;
+  margin-bottom: 24px;
+}
+
+.mountain-info-size {
+  text-transform: capitalize;
+}
+
+.mountain-info-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.info-card {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+.info-card h3 {
+  color: #1a1a2e;
+  font-size: 15px;
+  margin-bottom: 12px;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.info-row:last-of-type {
+  border-bottom: none;
+}
+
+.info-label {
+  color: #888;
+  font-size: 14px;
+}
+
+.info-value {
+  color: #1a1a2e;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.difficulty-bar-container {
+  margin-top: 12px;
+}
+
+.difficulty-bar {
+  display: flex;
+  border-radius: 8px;
+  overflow: hidden;
+  height: 28px;
+}
+
+.difficulty-segment {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+}
+
+.difficulty-segment.green { background: #4caf50; }
+.difficulty-segment.blue { background: #2196f3; }
+.difficulty-segment.black { background: #333; }
+
+.difficulty-legend {
+  display: flex;
+  gap: 16px;
+  margin-top: 8px;
+  font-size: 12px;
+  color: #888;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.legend-dot.green { background: #4caf50; }
+.legend-dot.blue { background: #2196f3; }
+.legend-dot.black { background: #333; }
+
+/* --- Stats Summary Bar --- */
+
+.stats-bar {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.stat-item {
+  flex: 1;
+  background: white;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  text-align: center;
+}
+
+.stat-value {
+  display: block;
+  font-size: 20px;
+  font-weight: 700;
+  color: #1a1a2e;
+}
+
+.stat-label {
+  display: block;
+  font-size: 12px;
+  color: #888;
+  margin-top: 4px;
+}
+
+/* --- Season Selector --- */
+
+.season-select {
+  padding: 8px 12px;
+  border: 1.5px solid #ddd;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1a1a2e;
+  background: white;
+  cursor: pointer;
+}
+
+/* --- Profile Mini Map --- */
+
+.profile-mini-map {
+  margin-bottom: 16px;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+/* --- Gear Section --- */
+
+.gear-section {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  margin-top: 24px;
+}
+
+.gear-section h3 {
+  color: #1a1a2e;
+  margin-bottom: 16px;
+}
+
+.gear-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.gear-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid #eee;
+  border-radius: 8px;
+}
+
+.gear-item input,
+.gear-item select {
+  padding: 6px 8px;
+  border: 1.5px solid #ddd;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.gear-item button {
+  padding: 4px 10px;
+  border: 1.5px solid #ddd;
+  border-radius: 6px;
+  background: white;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.gear-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a1a2e;
+  flex: 1;
+}
+
+.gear-category-badge {
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  background: #e8ecef;
+  color: #555;
+  text-transform: capitalize;
+}
+
+.gear-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.gear-add-form {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  align-items: center;
+}
+
+.gear-add-form input {
+  flex: 1;
+  padding: 8px 10px;
+  border: 1.5px solid #ddd;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.gear-add-form select {
+  padding: 8px 10px;
+  border: 1.5px solid #ddd;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.gear-add-form .btn-primary {
+  width: auto;
+  padding: 8px 16px;
+}
+
+/* --- Trip Card --- */
+
+.trip-card {
+  border: 1px solid #eee;
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+.trip-dates {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 13px;
+  color: #888;
+  margin-top: 4px;
+}
+
+/* --- Feed Page --- */
+
+.feed-page {
+  flex: 1;
+  overflow-y: auto;
+  background: #f5f6f8;
+  padding: 24px;
+  max-width: 600px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.feed-page h1 {
+  color: #1a1a2e;
+  font-size: 24px;
+  margin-bottom: 24px;
+}
+
+.feed-card {
+  background: white;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  margin-bottom: 16px;
+}
+
+.feed-user-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.feed-user-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: inherit;
+}
+
+.feed-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.feed-avatar.placeholder {
+  background: #1a1a2e;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.feed-username {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1a1a2e;
+}
