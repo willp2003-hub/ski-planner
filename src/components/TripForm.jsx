@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { updateTrip } from "../services/firestore.js";
 import { recommendMountains, DEFAULT_WEIGHTS } from "../services/recommend.js";
+import { fetchForecastSnowfall } from "../services/weather.js";
 import ResultMiniMap from "./ResultMiniMap.jsx";
 
 const WEIGHT_LABELS = {
@@ -12,7 +13,7 @@ const WEIGHT_LABELS = {
   trailsOpen: { label: "Trails Open", icon: "🎿" },
 };
 
-function TripForm({ userId, trip, onSave, onClose, onLocationChange, mountainData, origin, onSelectMountain, onClearMountain }) {
+function TripForm({ userId, trip, onSave, onClose, onLocationChange, mountainData, origin, onSelectMountain, onClearMountain, onMinimizedChange }) {
   const isEdit = !!trip;
   const [skiStart, setSkiStart] = useState(trip?.skiingDates?.start || "");
   const initDays = () => {
@@ -47,6 +48,8 @@ function TripForm({ userId, trip, onSave, onClose, onLocationChange, mountainDat
   const [weightsError, setWeightsError] = useState("");
   const [refreshPhase, setRefreshPhase] = useState(null); // "exit" | "enter" | null
   const [visibleCount, setVisibleCount] = useState(10);
+  const [forecastData, setForecastData] = useState({});
+  const [forecastLoading, setForecastLoading] = useState(false);
 
   const handleGeocode = async () => {
     const trimmed = locationQuery.trim();
@@ -73,6 +76,27 @@ function TripForm({ userId, trip, onSave, onClose, onLocationChange, mountainDat
       setLocationError("Geocode failed");
     }
     setLocationLoading(false);
+  };
+
+  const loadForecasts = async (ranked, startDate, days) => {
+    if (!startDate) return;
+    const today = new Date();
+    const start = new Date(startDate + "T00:00:00");
+    const diffDays = Math.round((start - today) / 86400000);
+    if (diffDays > 15) return; // outside Open-Meteo 16-day window
+    const end = new Date(start);
+    end.setDate(end.getDate() + days - 1);
+    const endDate = end.toISOString().split("T")[0];
+
+    setForecastLoading(true);
+    const entries = await Promise.all(
+      ranked.slice(0, 10).map(async (m) => {
+        const data = await fetchForecastSnowfall(m.latitude, m.longitude, startDate, endDate);
+        return [m.id, data];
+      })
+    );
+    setForecastData(Object.fromEntries(entries.filter(([, v]) => v !== null)));
+    setForecastLoading(false);
   };
 
   const getPreferences = () => ({
@@ -108,7 +132,10 @@ function TripForm({ userId, trip, onSave, onClose, onLocationChange, mountainDat
       setSaving(false);
     } else {
       const ranked = recommendMountains(mountainData || [], getPreferences(), weights);
+      setForecastData({});
       setResults(ranked);
+      if (onMinimizedChange) onMinimizedChange(true);
+      loadForecasts(ranked, skiStart, skiDays);
     }
   };
 
@@ -140,7 +167,9 @@ function TripForm({ userId, trip, onSave, onClose, onLocationChange, mountainDat
         clearInterval(exitInterval);
         // Phase 2: swap in new results, then cascade in
         const ranked = recommendMountains(mountainData || [], getPreferences(), weights);
+        setForecastData({});
         setResults(ranked);
+        loadForecasts(ranked, skiStart, skiDays);
         const newCount = Math.min(ranked.length, 10);
         setRefreshPhase("enter");
         setVisibleCount(0);
@@ -160,9 +189,8 @@ function TripForm({ userId, trip, onSave, onClose, onLocationChange, mountainDat
   const handleSelectMountain = (mountain) => {
     setSelectedId(mountain.id);
     setMinimized(true);
-    if (onSelectMountain) {
-      onSelectMountain(mountain);
-    }
+    if (onMinimizedChange) onMinimizedChange(true);
+    if (onSelectMountain) onSelectMountain(mountain);
   };
 
   const passColors = { ikon: "#1a1a4e", epic: "#f26522", independent: "#4a6d8a" };
@@ -175,8 +203,8 @@ function TripForm({ userId, trip, onSave, onClose, onLocationChange, mountainDat
           <span className="results-mini-title">Top Picks</span>
           <div style={{ display: "flex", gap: 4 }}>
             <button type="button" className="results-mini-btn" onClick={handleRefresh}>↻</button>
-            <button type="button" className="results-mini-btn" onClick={() => { setMinimized(false); if (onClearMountain) onClearMountain(); }}>Expand</button>
-            <button type="button" className="results-mini-btn" onClick={onClose}>&times;</button>
+            <button type="button" className="results-mini-btn" onClick={() => { setMinimized(false); if (onMinimizedChange) onMinimizedChange(false); if (onClearMountain) onClearMountain(); }}>Expand</button>
+            <button type="button" className="results-mini-btn" onClick={() => { if (onMinimizedChange) onMinimizedChange(false); onClose(); }}>&times;</button>
           </div>
         </div>
         <div className="results-mini-list">
@@ -199,11 +227,11 @@ function TripForm({ userId, trip, onSave, onClose, onLocationChange, mountainDat
   // --- Results View ---
   if (results) {
     return (
-      <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-overlay" onClick={() => { setMinimized(true); if (onMinimizedChange) onMinimizedChange(true); }}>
         <div className="modal-content results-modal" onClick={(e) => e.stopPropagation()}>
-          <button type="button" className="modal-close-btn" onClick={onClose}>&times;</button>
+          <button type="button" className="modal-close-btn" onClick={() => { setMinimized(true); if (onMinimizedChange) onMinimizedChange(true); }}>&times;</button>
           <div className="results-header">
-            <button type="button" className="results-back-btn" onClick={() => setResults(null)}>&larr; Back</button>
+            <button type="button" className="results-back-btn" onClick={() => { setResults(null); if (onMinimizedChange) onMinimizedChange(false); }}>&larr; Back</button>
             <h3>Top Picks</h3>
           </div>
 
@@ -272,6 +300,9 @@ function TripForm({ userId, trip, onSave, onClose, onLocationChange, mountainDat
                         <span>❄️ {m.snowfallPast7Days}</span>
                         <span>🎟️ {m.liftTicket || "—"}</span>
                         <span>🏨 {m.costPerNight}</span>
+                        <span className={forecastData[m.id] ? "forecast-snow" : "forecast-loading"}>
+                          🌨 {forecastLoading && !forecastData[m.id] ? "…" : forecastData[m.id] ? `${forecastData[m.id].snowfall}"` : "—"}
+                        </span>
                       </div>
                     </div>
                   </div>

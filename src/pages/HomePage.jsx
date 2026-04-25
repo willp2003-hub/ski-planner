@@ -21,6 +21,7 @@ function HomePage() {
   const [loadingDrive, setLoadingDrive] = useState(false);
   const [origin, setOrigin] = useState({ name: "New York, NY", coords: [-74.006, 40.7484] });
   const [showTripForm, setShowTripForm] = useState(false);
+  const [tripFormMinimized, setTripFormMinimized] = useState(false);
   const [planMountain, setPlanMountain] = useState(null);
 
   useEffect(() => {
@@ -76,7 +77,7 @@ function HomePage() {
   return (
     <div className="home-page">
       <div className="map-container">
-        <SkiMap mountains={filteredMountains} onMountainClick={(m) => { setSelectedMountain(m); setShowTripForm(false); setPlanMountain(null); }} selectedMountain={selectedMountain} suppressReset={showTripForm || !!planMountain} />
+        <SkiMap mountains={filteredMountains} onMountainClick={(m) => { setSelectedMountain(m); if (!tripFormMinimized) setShowTripForm(false); setPlanMountain(null); }} selectedMountain={selectedMountain} suppressReset={showTripForm || !!planMountain} />
         <div className="filter-bar">
           <button className={`filter-btn ikon ${passFilter === "ikon" ? "active" : ""}`} onClick={() => setPassFilter(passFilter === "ikon" ? "all" : "ikon")}>
             Ikon ({mountainData.filter((m) => m.pass === "ikon").length})
@@ -89,9 +90,11 @@ function HomePage() {
           </button>
         </div>
         <h1 className="map-title">Pray for Snow</h1>
-        <button className="plan-trip-btn" onClick={() => { setShowTripForm(true); setSelectedMountain(null); }}>
-          Where to Shred
-        </button>
+        {(!showTripForm || !tripFormMinimized) && (
+          <button className="plan-trip-btn" onClick={() => { setShowTripForm(true); setSelectedMountain(null); }}>
+            Where to Shred
+          </button>
+        )}
         <div className="mountain-count">
           {loading ? "\u23f3 Fetching live data..." : <><strong>{filteredMountains.length}</strong> mountains \u00b7 Live data \u2713</>}
         </div>
@@ -106,12 +109,13 @@ function HomePage() {
           <TripForm
             userId={user.uid}
             onSave={() => setShowTripForm(false)}
-            onClose={() => setShowTripForm(false)}
+            onClose={() => { setShowTripForm(false); setTripFormMinimized(false); }}
             onLocationChange={handleLocationChange}
             mountainData={mountainData}
             origin={origin}
             onSelectMountain={(m) => { setSelectedMountain(m); }}
             onClearMountain={() => setSelectedMountain(null)}
+            onMinimizedChange={setTripFormMinimized}
           />
         ) : (
           <div className="modal-overlay" onClick={() => setShowTripForm(false)}>

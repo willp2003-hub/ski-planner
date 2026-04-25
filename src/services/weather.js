@@ -168,4 +168,21 @@ export const fetchBaseAndAverage = async (latitude, longitude) => {
   }
 };
 
+export const fetchForecastSnowfall = async (latitude, longitude, startDate, endDate) => {
+  try {
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=snowfall_sum,precipitation_sum&start_date=${startDate}&end_date=${endDate}&timezone=America/New_York&forecast_days=16`;
+    const res = await fetch(url);
+    const data = await res.json();
+    if (data.error) return null;
+    const snowCm = (data.daily?.snowfall_sum || []).reduce((s, v) => s + (v || 0), 0);
+    const precipIn = (data.daily?.precipitation_sum || []).reduce((s, v) => s + (v || 0), 0);
+    return {
+      snowfall: parseFloat((snowCm * 0.393701).toFixed(1)),
+      precip: parseFloat(precipIn.toFixed(2)),
+    };
+  } catch {
+    return null;
+  }
+};
+
 export default getSnowfallData;
