@@ -1,5 +1,5 @@
-import React, { useEffect } from "react";
-import { MapContainer, TileLayer, Marker, Tooltip, useMap } from "react-leaflet";
+import React, { useEffect, useState } from "react";
+import { MapContainer, TileLayer, Marker, Tooltip, useMap, Pane } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
@@ -30,6 +30,59 @@ const createMountainIcon = (size, pass) => {
 const DEFAULT_CENTER = [43.0, -73.5];
 const DEFAULT_ZOOM = 6;
 
+function fmt24(ts) {
+  const d = new Date(ts * 1000);
+  return d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+}
+
+function RainViewerOverlay({ frames, frameIndex }) {
+  if (frames.length === 0) return null;
+  return (
+    <Pane name="radar" style={{ zIndex: 250 }}>
+      {frames.map((frame, i) => (
+        <TileLayer
+          key={frame.path}
+          url={`https://tilecache.rainviewer.com${frame.path}/256/{z}/{x}/{y}/2/1_1.png`}
+          opacity={i === frameIndex ? 0.65 : 0}
+          attribution={i === frameIndex ? "RainViewer" : ""}
+          pane="radar"
+        />
+      ))}
+    </Pane>
+  );
+}
+
+function RadarTimeline({ frames, frameIndex, setFrameIndex, isPlaying, setIsPlaying, pastCount }) {
+  if (frames.length === 0) return null;
+  const isLive = frameIndex >= pastCount;
+  const currentTime = fmt24(frames[frameIndex].time);
+
+  return (
+    <div className="radar-timeline">
+      <button
+        className="radar-play-btn"
+        onClick={() => setIsPlaying((p) => !p)}
+        title={isPlaying ? "Pause" : "Play"}
+      >
+        {isPlaying ? "⏸" : "▶"}
+      </button>
+      <input
+        type="range"
+        className="radar-scrubber"
+        min={0}
+        max={frames.length - 1}
+        value={frameIndex}
+        onChange={(e) => {
+          setIsPlaying(false);
+          setFrameIndex(Number(e.target.value));
+        }}
+      />
+      <span className="radar-timeline-time">{currentTime}</span>
+      {isLive && <span className="radar-live-badge">LIVE</span>}
+    </div>
+  );
+}
+
 function FlyToMountain({ mountain, suppressReset }) {
   const map = useMap();
   useEffect(() => {
@@ -37,7 +90,6 @@ function FlyToMountain({ mountain, suppressReset }) {
       const targetZoom = Math.max(map.getZoom(), 8);
       const mapSize = map.getSize();
       const targetPoint = map.project([mountain.latitude, mountain.longitude], targetZoom);
-      // Shift down so the mountain appears in the upper third, above the popup
       const offsetPoint = L.point(targetPoint.x, targetPoint.y + mapSize.y * 0.15);
       const offsetLatLng = map.unproject(offsetPoint, targetZoom);
       map.flyTo(offsetLatLng, targetZoom, { duration: 0.8 });
@@ -49,26 +101,72 @@ function FlyToMountain({ mountain, suppressReset }) {
 }
 
 export default function SkiMap({ mountains, onMountainClick, selectedMountain, suppressReset }) {
+  const [showRadar, setShowRadar] = useState(false);
+  const [frames, setFrames] = useState([]);
+  const [pastCount, setPastCount] = useState(0);
+  const [frameIndex, setFrameIndex] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(true);
+
+  useEffect(() => {
+    if (!showRadar || frames.length > 0) return;
+    fetch("https://api.rainviewer.com/public/weather-maps.json")
+      .then((r) => r.json())
+      .then((data) => {
+        const past = data.radar?.past || [];
+        const nowcast = data.radar?.nowcast || [];
+        setFrames([...past, ...nowcast]);
+        setPastCount(past.length);
+        setFrameIndex(0);
+        setIsPlaying(true);
+      })
+      .catch(() => {});
+  }, [showRadar]);
+
+  useEffect(() => {
+    if (!isPlaying || frames.length === 0) return;
+    const id = setInterval(() => setFrameIndex((i) => (i + 1) % frames.length), 500);
+    return () => clearInterval(id);
+  }, [isPlaying, frames]);
+
   return (
-    <MapContainer center={DEFAULT_CENTER} zoom={DEFAULT_ZOOM} style={{ height: "100%", width: "100%" }} zoomControl={false}>
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/">OSM</a>'
-        url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
-      />
-      <FlyToMountain mountain={selectedMountain} suppressReset={suppressReset} />
-      {mountains.map((mountain) => (
-        <Marker
-          key={mountain.id}
-          position={[mountain.latitude, mountain.longitude]}
-          icon={createMountainIcon(mountain.size, mountain.pass)}
-          eventHandlers={{ click: () => onMountainClick(mountain) }}
-        >
-          <Tooltip direction="top" offset={[0, -10]}>
-            <strong>{mountain.name}</strong><br />
-            {mountain.state} · {mountain.pass === "ikon" ? "Ikon" : mountain.pass === "epic" ? "Epic" : "Independent"}
-          </Tooltip>
-        </Marker>
-      ))}
-    </MapContainer>
+    <div style={{ position: "relative", height: "100%", width: "100%" }}>
+      <MapContainer center={DEFAULT_CENTER} zoom={DEFAULT_ZOOM} style={{ height: "100%", width: "100%" }} zoomControl={false}>
+        <TileLayer
+          attribution='&copy; <a href="https://www.openstreetmap.org/">OSM</a>'
+          url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+        />
+        {showRadar && <RainViewerOverlay frames={frames} frameIndex={frameIndex} />}
+        <FlyToMountain mountain={selectedMountain} suppressReset={suppressReset} />
+        {mountains.map((mountain) => (
+          <Marker
+            key={mountain.id}
+            position={[mountain.latitude, mountain.longitude]}
+            icon={createMountainIcon(mountain.size, mountain.pass)}
+            eventHandlers={{ click: () => onMountainClick(mountain) }}
+          >
+            <Tooltip direction="top" offset={[0, -10]}>
+              <strong>{mountain.name}</strong><br />
+              {mountain.state} · {mountain.pass === "ikon" ? "Ikon" : mountain.pass === "epic" ? "Epic" : "Independent"}
+            </Tooltip>
+          </Marker>
+        ))}
+      </MapContainer>
+      <button
+        className={`radar-toggle-btn${showRadar ? " active" : ""}`}
+        onClick={() => setShowRadar((v) => !v)}
+      >
+        🌨 Radar
+      </button>
+      {showRadar && (
+        <RadarTimeline
+          frames={frames}
+          frameIndex={frameIndex}
+          setFrameIndex={setFrameIndex}
+          isPlaying={isPlaying}
+          setIsPlaying={setIsPlaying}
+          pastCount={pastCount}
+        />
+      )}
+    </div>
   );
 }
