@@ -2100,3 +2100,89 @@
   font-weight: 600;
   color: #1a1a2e;
 }
+
+/* Result card forecast row */
+.result-forecast {
+  margin-top: 5px;
+  font-size: 12px;
+}
+.forecast-snow {
+  color: #1a1a4e;
+  font-weight: 600;
+}
+.forecast-loading {
+  color: #888;
+}
+.forecast-na {
+  color: #aaa;
+}
+
+/* Radar overlay */
+.radar-toggle-btn {
+  position: absolute;
+  bottom: 24px;
+  left: 16px;
+  z-index: 1000;
+  background: rgba(255,255,255,0.92);
+  border: 1.5px solid rgba(26,26,46,0.15);
+  border-radius: 20px;
+  padding: 7px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  color: #1a1a2e;
+}
+.radar-toggle-btn.active {
+  background: #1a1a4e;
+  color: white;
+  border-color: #1a1a4e;
+}
+.radar-timeline {
+  position: absolute;
+  bottom: 70px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255,255,255,0.92);
+  padding: 8px 14px;
+  border-radius: 20px;
+  border: 1.5px solid rgba(26,26,46,0.15);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  width: 340px;
+}
+.radar-play-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  color: #1a1a2e;
+  padding: 0;
+  line-height: 1;
+}
+.radar-scrubber {
+  flex: 1;
+  height: 4px;
+  accent-color: #1a1a4e;
+  cursor: pointer;
+}
+.radar-timeline-time {
+  font-size: 12px;
+  font-weight: 600;
+  color: #1a1a2e;
+  font-variant-numeric: tabular-nums;
+  min-width: 36px;
+  text-align: right;
+}
+.radar-live-badge {
+  font-size: 10px;
+  font-weight: 700;
+  color: white;
+  background: #e53935;
+  padding: 2px 6px;
+  border-radius: 8px;
+  white-space: nowrap;
+}
