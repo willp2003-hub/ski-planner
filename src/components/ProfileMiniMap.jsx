@@ -8,10 +8,14 @@ function ProfileMiniMap({ posts, mountains }) {
     return mountains.filter((m) => resortIds.has(String(m.id)));
   }, [posts, mountains]);
 
-  if (visited.length === 0) return null;
+  const validVisited = visited.filter(
+    (m) => m.latitude != null && m.longitude != null && !isNaN(m.latitude) && !isNaN(m.longitude)
+  );
 
-  const lats = visited.map((m) => m.lat);
-  const lngs = visited.map((m) => m.lng);
+  if (validVisited.length === 0) return null;
+
+  const lats = validVisited.map((m) => m.latitude);
+  const lngs = validVisited.map((m) => m.longitude);
   const bounds = [
     [Math.min(...lats) - 0.5, Math.min(...lngs) - 0.5],
     [Math.max(...lats) + 0.5, Math.max(...lngs) + 0.5],
@@ -30,10 +34,10 @@ function ProfileMiniMap({ posts, mountains }) {
         attributionControl={false}
       >
         <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" />
-        {visited.map((m) => (
+        {validVisited.map((m) => (
           <CircleMarker
             key={m.id}
-            center={[m.lat, m.lng]}
+            center={[m.latitude, m.longitude]}
             radius={6}
             pathOptions={{ color: "#1a1a2e", fillColor: "#2d3561", fillOpacity: 0.8, weight: 2 }}
           >

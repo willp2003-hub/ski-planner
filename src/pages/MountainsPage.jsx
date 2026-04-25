@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import mountains from "../data/mountains.js";
+import MountainIcon from "../components/MountainIcon.jsx";
 
 const STATE_ORDER = ["ME", "NH", "VT", "NY", "NJ", "MA", "PA"];
 const STATE_NAMES = {
@@ -33,11 +34,13 @@ function MountainsPage() {
                 to={`/mountains/${m.id}`}
                 className="mountain-list-item"
               >
-                <span className="mountain-list-name">{m.name}</span>
+                <span className="mountain-list-name">
+                  <MountainIcon pass={m.pass} />
+                  {m.name}
+                </span>
                 <span className="mountain-list-meta">
                   <span className={`pass-badge ${m.pass}`}>{m.pass}</span>
-                  <span className="mountain-list-size">{m.size}</span>
-                  <span className="mountain-list-runs">{m.runs} runs</span>
+                  <span className="mountain-list-runs">{m.skiableAcres.toLocaleString()} acres</span>
                 </span>
               </Link>
             ))}

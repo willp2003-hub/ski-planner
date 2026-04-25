@@ -1,18 +1,30 @@
-import React, { useState } from "react";
-import mountains from "../data/mountains.js";
-import StarRating from "./StarRating.jsx";
-import { createPost, updatePost } from "../services/firestore.js";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext.jsx";
+import { getUserProfile, createPost } from "../services/firestore.js";
 import { uploadPostPhoto } from "../services/storage.js";
+import mountains from "../data/mountains.js";
+import StarRating from "../components/StarRating.jsx";
 
-function SkiDayForm({ userId, post, onSave, onClose, userProfile }) {
-  const isEdit = !!post;
-  const [resortId, setResortId] = useState(post?.resortId || "");
-  const [date, setDate] = useState(post?.date || "");
-  const [notes, setNotes] = useState(post?.notes || "");
-  const [ratings, setRatings] = useState(post?.ratings || { conditions: 0, crowds: 0, terrain: 0, overall: 0 });
+function LogSkiDayPage() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [userProfile, setUserProfile] = useState(null);
+  const [resortId, setResortId] = useState("");
+  const [date, setDate] = useState("");
+  const [notes, setNotes] = useState("");
+  const [ratings, setRatings] = useState({ conditions: 0, crowds: 0, terrain: 0, overall: 0 });
   const [photoFiles, setPhotoFiles] = useState([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+    getUserProfile(user.uid).then(setUserProfile).catch(() => {});
+  }, [user, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -20,17 +32,16 @@ function SkiDayForm({ userId, post, onSave, onClose, userProfile }) {
     setError("");
     try {
       const resort = mountains.find((m) => String(m.id) === String(resortId));
-      let photoUrls = post?.photoUrls || [];
+      let photoUrls = [];
 
       if (photoFiles.length > 0) {
-        const uploads = await Promise.all(
-          photoFiles.map((f) => uploadPostPhoto(userId, f))
+        photoUrls = await Promise.all(
+          photoFiles.map((f) => uploadPostPhoto(user.uid, f))
         );
-        photoUrls = [...photoUrls, ...uploads];
       }
 
       const data = {
-        userId,
+        userId: user.uid,
         resortId: String(resortId),
         resortName: resort?.name || "",
         date,
@@ -42,26 +53,21 @@ function SkiDayForm({ userId, post, onSave, onClose, userProfile }) {
         userProfilePhotoUrl: userProfile?.profilePhotoUrl || "",
       };
 
-      if (isEdit) {
-        await updatePost(post.id, data);
-        onSave({ ...post, ...data });
-      } else {
-        const id = await createPost(data);
-        onSave({ id, ...data });
-      }
+      await createPost(data);
+      navigate(`/profile/${user.uid}`);
     } catch (err) {
       console.error("Failed to save post:", err);
       setError(err.message || "Failed to save post");
       setSaving(false);
-      return;
     }
-    setSaving(false);
   };
 
+  if (!user) return null;
+
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        <h3>{isEdit ? "Edit Ski Day" : "Log a Ski Day"}</h3>
+    <div className="log-ski-day-page">
+      <div className="log-ski-day-card">
+        <h2>Log a Ski Day</h2>
         {error && <div className="login-error">{error}</div>}
         <form onSubmit={handleSubmit}>
           <label>
@@ -100,9 +106,8 @@ function SkiDayForm({ userId, post, onSave, onClose, userProfile }) {
             />
           </label>
           <div className="form-actions">
-            <button type="button" onClick={onClose}>Cancel</button>
             <button type="submit" className="btn-primary" disabled={saving}>
-              {saving ? "Saving..." : isEdit ? "Update" : "Post"}
+              {saving ? "Saving..." : "Post"}
             </button>
           </div>
         </form>
@@ -111,4 +116,4 @@ function SkiDayForm({ userId, post, onSave, onClose, userProfile }) {
   );
 }
 
-export default SkiDayForm;
+export default LogSkiDayPage;

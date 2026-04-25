@@ -11,10 +11,12 @@ function ProfileForm({ uid, profile, onSave, onClose }) {
   const [riderType, setRiderType] = useState(profile?.riderType || "");
   const [photoFile, setPhotoFile] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
+    setError("");
     try {
       let profilePhotoUrl = profile?.profilePhotoUrl || "";
       if (photoFile) {
@@ -25,6 +27,7 @@ function ProfileForm({ uid, profile, onSave, onClose }) {
       onSave({ ...profile, ...data });
     } catch (err) {
       console.error("Failed to save profile:", err);
+      setError(err.message || "Failed to save profile");
     }
     setSaving(false);
   };
@@ -32,7 +35,9 @@ function ProfileForm({ uid, profile, onSave, onClose }) {
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+        <button type="button" className="modal-close-btn" onClick={onClose}>&times;</button>
         <h3>Edit Profile</h3>
+        {error && <div className="login-error">{error}</div>}
         <form onSubmit={handleSubmit}>
           <label>
             Display Name
@@ -74,7 +79,6 @@ function ProfileForm({ uid, profile, onSave, onClose }) {
             </select>
           </label>
           <div className="form-actions">
-            <button type="button" onClick={onClose}>Cancel</button>
             <button type="submit" className="btn-primary" disabled={saving}>
               {saving ? "Saving..." : "Save"}
             </button>
