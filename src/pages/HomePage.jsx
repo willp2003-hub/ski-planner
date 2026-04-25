@@ -1,15 +1,19 @@
 import "leaflet/dist/leaflet.css";
 import React, { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import SkiMap from "../components/SkiMap.jsx";
 import MountainPopup from "../components/MountainPopup.jsx";
+import PlanTripPopup from "../components/PlanTripPopup.jsx";
 import TripForm from "../components/TripForm.jsx";
 import mountains from "../data/mountains.js";
 import getSnowfallData from "../services/weather.js";
 import getDriveTimes from "../services/driving.js";
+import { fetchAllTrailStatus } from "../services/trailStatus.js";
 import { useAuth } from "../contexts/AuthContext.jsx";
 
 function HomePage() {
   const { user } = useAuth();
+  const location = useLocation();
   const [selectedMountain, setSelectedMountain] = useState(null);
   const [passFilter, setPassFilter] = useState("all");
   const [mountainData, setMountainData] = useState(mountains);
@@ -17,6 +21,15 @@ function HomePage() {
   const [loadingDrive, setLoadingDrive] = useState(false);
   const [origin, setOrigin] = useState({ name: "New York, NY", coords: [-74.006, 40.7484] });
   const [showTripForm, setShowTripForm] = useState(false);
+  const [planMountain, setPlanMountain] = useState(null);
+
+  useEffect(() => {
+    if (location.state?.openTripForm) {
+      setShowTripForm(true);
+      // Clear the state so it doesn't re-trigger on re-render
+      window.history.replaceState({}, "");
+    }
+  }, [location.state]);
 
   useEffect(() => {
     const fetchAllData = async () => {
@@ -25,6 +38,16 @@ function HomePage() {
         const withSnow = await getSnowfallData(mountains);
         const withDrive = await getDriveTimes(withSnow, origin.coords);
         setMountainData(withDrive);
+
+        // Fetch trail status in the background
+        fetchAllTrailStatus(withDrive).then((trailResults) => {
+          setMountainData((prev) =>
+            prev.map((m) => trailResults[m.name]
+              ? { ...m, openTrails: trailResults[m.name].trailsOpen, openLifts: trailResults[m.name].liftsOpen, totalLifts: trailResults[m.name].liftsTotal, liftTicket: trailResults[m.name].liftTicket || m.liftTicket }
+              : m
+            )
+          );
+        });
       } catch (error) {
         console.error("Failed to fetch data:", error);
       }
@@ -53,7 +76,7 @@ function HomePage() {
   return (
     <div className="home-page">
       <div className="map-container">
-        <SkiMap mountains={filteredMountains} onMountainClick={setSelectedMountain} />
+        <SkiMap mountains={filteredMountains} onMountainClick={(m) => { setSelectedMountain(m); setShowTripForm(false); setPlanMountain(null); }} selectedMountain={selectedMountain} suppressReset={showTripForm || !!planMountain} />
         <div className="filter-bar">
           <button className={`filter-btn ikon ${passFilter === "ikon" ? "active" : ""}`} onClick={() => setPassFilter(passFilter === "ikon" ? "all" : "ikon")}>
             Ikon ({mountainData.filter((m) => m.pass === "ikon").length})
@@ -66,7 +89,7 @@ function HomePage() {
           </button>
         </div>
         <h1 className="map-title">Pray for Snow</h1>
-        <button className="plan-trip-btn" onClick={() => setShowTripForm(true)}>
+        <button className="plan-trip-btn" onClick={() => { setShowTripForm(true); setSelectedMountain(null); }}>
           Where to Shred
         </button>
         <div className="mountain-count">
@@ -74,7 +97,9 @@ function HomePage() {
         </div>
       </div>
 
-      <MountainPopup mountain={selectedMountain} onClose={() => setSelectedMountain(null)} originName={origin.name} />
+      <MountainPopup mountain={selectedMountain} onClose={() => setSelectedMountain(null)} originName={origin.name} onPlanTrip={() => { setPlanMountain(selectedMountain); setSelectedMountain(null); }} />
+
+      <PlanTripPopup mountain={planMountain} onClose={() => setPlanMountain(null)} origin={origin} onLocationChange={handleLocationChange} />
 
       {showTripForm && (
         user ? (
@@ -83,6 +108,10 @@ function HomePage() {
             onSave={() => setShowTripForm(false)}
             onClose={() => setShowTripForm(false)}
             onLocationChange={handleLocationChange}
+            mountainData={mountainData}
+            origin={origin}
+            onSelectMountain={(m) => { setSelectedMountain(m); }}
+            onClearMountain={() => setSelectedMountain(null)}
           />
         ) : (
           <div className="modal-overlay" onClick={() => setShowTripForm(false)}>

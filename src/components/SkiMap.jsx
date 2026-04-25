@@ -1,5 +1,5 @@
-import React from "react";
-import { MapContainer, TileLayer, Marker, Tooltip } from "react-leaflet";
+import React, { useEffect } from "react";
+import { MapContainer, TileLayer, Marker, Tooltip, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
@@ -27,13 +27,35 @@ const createMountainIcon = (size, pass) => {
   });
 };
 
-export default function SkiMap({ mountains, onMountainClick }) {
+const DEFAULT_CENTER = [43.0, -73.5];
+const DEFAULT_ZOOM = 6;
+
+function FlyToMountain({ mountain, suppressReset }) {
+  const map = useMap();
+  useEffect(() => {
+    if (mountain) {
+      const targetZoom = Math.max(map.getZoom(), 8);
+      const mapSize = map.getSize();
+      const targetPoint = map.project([mountain.latitude, mountain.longitude], targetZoom);
+      // Shift down so the mountain appears in the upper third, above the popup
+      const offsetPoint = L.point(targetPoint.x, targetPoint.y + mapSize.y * 0.15);
+      const offsetLatLng = map.unproject(offsetPoint, targetZoom);
+      map.flyTo(offsetLatLng, targetZoom, { duration: 0.8 });
+    } else if (!suppressReset) {
+      map.flyTo(DEFAULT_CENTER, DEFAULT_ZOOM, { duration: 0.8 });
+    }
+  }, [mountain, suppressReset, map]);
+  return null;
+}
+
+export default function SkiMap({ mountains, onMountainClick, selectedMountain, suppressReset }) {
   return (
-    <MapContainer center={[43.0, -73.5]} zoom={6} style={{ height: "100%", width: "100%" }} zoomControl={false}>
+    <MapContainer center={DEFAULT_CENTER} zoom={DEFAULT_ZOOM} style={{ height: "100%", width: "100%" }} zoomControl={false}>
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/">OSM</a>'
         url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
       />
+      <FlyToMountain mountain={selectedMountain} suppressReset={suppressReset} />
       {mountains.map((mountain) => (
         <Marker
           key={mountain.id}

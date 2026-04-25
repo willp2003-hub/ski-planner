@@ -11,7 +11,7 @@ import SkiDayCard from "../components/SkiDayCard.jsx";
 import SeasonSelector from "../components/SeasonSelector.jsx";
 import StatsSummaryBar from "../components/StatsSummaryBar.jsx";
 import ProfileMiniMap from "../components/ProfileMiniMap.jsx";
-import GearSection from "../components/GearSection.jsx";
+import SkiDaysCalendar from "../components/SkiDaysCalendar.jsx";
 import TripCard from "../components/TripCard.jsx";
 import TripForm from "../components/TripForm.jsx";
 import { getCurrentSeasonYear, getSeasonRange } from "../utils/seasons.js";
@@ -42,6 +42,7 @@ function ProfilePage() {
   const [editingTrip, setEditingTrip] = useState(null);
   const [error, setError] = useState(null);
   const [selectedSeason, setSelectedSeason] = useState(getCurrentSeasonYear());
+  const [calendarView, setCalendarView] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -129,7 +130,7 @@ function ProfilePage() {
           <h2>{profile?.displayName || "Unnamed Skier"}</h2>
           {profile?.bio && <p className="profile-bio">{profile.bio}</p>}
           <div className="profile-meta">
-            {homeResort && <span>Home: {homeResort.name}</span>}
+            {homeResort && <span>Home Mountain: {homeResort.name}</span>}
             {profile?.passType && <span className={`pass-badge ${profile.passType}`}>{profile.passType}</span>}
             {profile?.riderType && <span className="rider-badge">{profile.riderType === "both" ? "Skier & Snowboarder" : profile.riderType === "skier" ? "Skier" : "Snowboarder"}</span>}
           </div>
@@ -152,18 +153,42 @@ function ProfilePage() {
 
       <div className="profile-posts">
         <div className="posts-header">
-          <h3>Ski Days ({filteredPosts.length})</h3>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <h3>Ski Days ({filteredPosts.length})</h3>
+            <button
+              type="button"
+              className={`calendar-toggle-btn${calendarView ? " active" : ""}`}
+              onClick={() => setCalendarView(true)}
+              title="Calendar view"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" />
+                <line x1="16" y1="2" x2="16" y2="6" />
+                <line x1="8" y1="2" x2="8" y2="6" />
+                <line x1="3" y1="10" x2="21" y2="10" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              className={`calendar-toggle-btn${!calendarView ? " active" : ""}`}
+              onClick={() => setCalendarView(false)}
+              title="List view"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="4" y1="6" x2="20" y2="6" />
+                <line x1="4" y1="12" x2="20" y2="12" />
+                <line x1="4" y1="18" x2="20" y2="18" />
+              </svg>
+            </button>
+          </div>
           <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
             <SeasonSelector posts={posts} selectedSeason={selectedSeason} onSeasonChange={setSelectedSeason} />
-            {isOwner && (
-              <button className="btn-primary" onClick={() => { setEditingPost(null); setShowSkiDayForm(true); }}>
-                + Log Ski Day
-              </button>
-            )}
           </div>
         </div>
 
-        {filteredPosts.length === 0 ? (
+        {calendarView ? (
+          <SkiDaysCalendar posts={filteredPosts} />
+        ) : filteredPosts.length === 0 ? (
           <p className="empty-state">
             {isOwner ? "No ski days logged this season. Hit the button above to add your first!" : "No ski days logged this season."}
           </p>
@@ -184,7 +209,7 @@ function ProfilePage() {
         <div className="profile-posts" style={{ marginTop: 24 }}>
           <div className="posts-header">
             <h3>Trips ({trips.length})</h3>
-            <button className="btn-primary" onClick={() => { setEditingTrip(null); setShowTripForm(true); }}>
+            <button className="btn-primary" onClick={() => navigate("/", { state: { openTripForm: true } })}>
               + Plan Trip
             </button>
           </div>
@@ -203,13 +228,6 @@ function ProfilePage() {
           )}
         </div>
       )}
-
-      <GearSection
-        uid={userId}
-        gear={profile?.gear || []}
-        isOwner={isOwner}
-        onUpdate={(gear) => setProfile((prev) => ({ ...prev, gear }))}
-      />
 
       {showProfileForm && (
         <ProfileForm

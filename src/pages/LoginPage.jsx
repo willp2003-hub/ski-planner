@@ -43,6 +43,7 @@ function LoginPage() {
       const cred = await signInWithPopup(auth, googleProvider);
       navigate(`/profile/${cred.user.uid}`);
     } catch (err) {
+      console.error("Google sign-in error:", err);
       setError(err.message.replace("Firebase: ", ""));
     }
     setLoading(false);

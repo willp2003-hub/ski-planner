@@ -7,6 +7,7 @@ import ProfilePage from "./pages/ProfilePage.jsx";
 import MountainsPage from "./pages/MountainsPage.jsx";
 import MountainInfoPage from "./pages/MountainInfoPage.jsx";
 import FeedPage from "./pages/FeedPage.jsx";
+import LogSkiDayPage from "./pages/LogSkiDayPage.jsx";
 import "./App.css";
 
 function App() {
@@ -16,6 +17,7 @@ function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/feed" element={<FeedPage />} />
+        <Route path="/log" element={<LogSkiDayPage />} />
         <Route path="/profile/:userId" element={<ProfilePage />} />
         <Route path="/mountains" element={<MountainsPage />} />
         <Route path="/mountains/:mountainId" element={<MountainInfoPage />} />

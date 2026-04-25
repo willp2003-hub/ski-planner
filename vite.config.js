@@ -14,5 +14,12 @@ export default defineConfig({
       clientPort: 5173,
       port: 5173,
     },
+    proxy: {
+      '/api/onthesnow': {
+        target: 'https://www.onthesnow.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/onthesnow/, ''),
+      },
+    },
   },
 })

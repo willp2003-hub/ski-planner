@@ -21,8 +21,21 @@ function FeedCard({ post }) {
 
       <div className="ski-day-header">
         <h4>{post.resortName}</h4>
-        <StarRating value={post.rating} readOnly />
+        <StarRating value={post.ratings?.overall ?? post.rating} readOnly />
       </div>
+
+      {post.ratings && (
+        <div className="ratings-display">
+          {[["conditions", "Conditions"], ["crowds", "Crowds"], ["terrain", "Terrain"]].map(([key, label]) => (
+            post.ratings[key] > 0 && (
+              <div key={key} className="rating-row-display">
+                <span className="rating-label-display">{label}</span>
+                <StarRating value={post.ratings[key]} readOnly />
+              </div>
+            )
+          ))}
+        </div>
+      )}
 
       {post.notes && <p className="ski-day-notes">{post.notes}</p>}
 
