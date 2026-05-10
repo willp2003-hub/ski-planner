@@ -2,6 +2,14 @@ import React from "react";
 import { Link } from "react-router-dom";
 import StarRating from "./StarRating.jsx";
 
+function formatDate(dateStr) {
+  if (!dateStr) return "";
+  const [year, month, day] = dateStr.split("-").map(Number);
+  return new Date(year, month - 1, day).toLocaleDateString("en-US", {
+    month: "long", day: "numeric", year: "numeric",
+  });
+}
+
 function FeedCard({ post }) {
   return (
     <div className="feed-card">
@@ -16,7 +24,7 @@ function FeedCard({ post }) {
           )}
           <span className="feed-username">{post.userDisplayName || "Skier"}</span>
         </Link>
-        <span className="ski-day-date">{post.date}</span>
+        <span className="ski-day-date">{formatDate(post.date)}</span>
       </div>
 
       <div className="ski-day-header">

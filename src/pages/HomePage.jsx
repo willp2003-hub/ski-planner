@@ -96,7 +96,7 @@ function HomePage() {
           </button>
         )}
         <div className="mountain-count">
-          {loading ? "\u23f3 Fetching live data..." : <><strong>{filteredMountains.length}</strong> mountains \u00b7 Live data \u2713</>}
+          {loading ? <><span className="spinner" /> Fetching live data...</> : <><strong>{filteredMountains.length}</strong> mountains \u00b7 Live data \u2713</>}
         </div>
       </div>
 

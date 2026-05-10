@@ -1,13 +1,21 @@
 import React from "react";
 import StarRating from "./StarRating.jsx";
 
+function formatDate(dateStr) {
+  if (!dateStr) return "";
+  const [year, month, day] = dateStr.split("-").map(Number);
+  return new Date(year, month - 1, day).toLocaleDateString("en-US", {
+    month: "long", day: "numeric", year: "numeric",
+  });
+}
+
 function SkiDayCard({ post, isOwner, onEdit, onDelete }) {
   return (
     <div className="ski-day-card">
       <div className="ski-day-header">
         <div>
           <h4>{post.resortName}</h4>
-          <span className="ski-day-date">{post.date}</span>
+          <span className="ski-day-date">{formatDate(post.date)}</span>
         </div>
         <StarRating value={post.ratings?.overall ?? post.rating} readOnly />
       </div>
