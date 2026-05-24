@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useState } from "react";
 import StarRating from "./StarRating.jsx";
+import PhotoLightbox from "./PhotoLightbox.jsx";
 
 function formatDate(dateStr) {
   if (!dateStr) return "";
@@ -10,6 +11,7 @@ function formatDate(dateStr) {
 }
 
 function SkiDayCard({ post, isOwner, onEdit, onDelete }) {
+  const [lightboxIndex, setLightboxIndex] = useState(null);
   return (
     <div className="ski-day-card">
       <div className="ski-day-header">
@@ -38,9 +40,24 @@ function SkiDayCard({ post, isOwner, onEdit, onDelete }) {
       {post.photoUrls?.length > 0 && (
         <div className="ski-day-photos">
           {post.photoUrls.map((url, i) => (
-            <img key={i} src={url} alt={`Ski day photo ${i + 1}`} />
+            <img
+              key={i}
+              src={url}
+              alt={`Ski day photo ${i + 1}`}
+              className="clickable-photo"
+              onClick={() => setLightboxIndex(i)}
+            />
           ))}
         </div>
+      )}
+
+      {lightboxIndex !== null && (
+        <PhotoLightbox
+          photos={post.photoUrls}
+          index={lightboxIndex}
+          onClose={() => setLightboxIndex(null)}
+          onNav={setLightboxIndex}
+        />
       )}
 
       {isOwner && (

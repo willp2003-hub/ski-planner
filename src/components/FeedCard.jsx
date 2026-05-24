@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import StarRating from "./StarRating.jsx";
+import PhotoLightbox from "./PhotoLightbox.jsx";
 
 function formatDate(dateStr) {
   if (!dateStr) return "";
@@ -12,6 +13,7 @@ function formatDate(dateStr) {
 
 function FeedCard({ post }) {
   const [showSubRatings, setShowSubRatings] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(null);
 
   const subRatings = [
     ["Conditions", post.ratings?.conditions],
@@ -71,10 +73,23 @@ function FeedCard({ post }) {
           {post.notes && <p className="ski-day-notes feed-notes">{post.notes}</p>}
           {post.photoUrls?.length > 0 && (
             <div className="feed-photo">
-              <img src={post.photoUrls[0]} alt="Ski day" />
+              <img
+                src={post.photoUrls[0]}
+                alt="Ski day"
+                className="clickable-photo"
+                onClick={() => setLightboxIndex(0)}
+              />
             </div>
           )}
         </div>
+      )}
+      {lightboxIndex !== null && (
+        <PhotoLightbox
+          photos={post.photoUrls}
+          index={lightboxIndex}
+          onClose={() => setLightboxIndex(null)}
+          onNav={setLightboxIndex}
+        />
       )}
     </div>
   );
