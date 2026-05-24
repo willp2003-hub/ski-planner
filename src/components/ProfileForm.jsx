@@ -57,7 +57,7 @@ function ProfileForm({ uid, profile, onSave, onClose }) {
             Home Resort
             <select value={homeResortId} onChange={(e) => setHomeResortId(e.target.value)}>
               <option value="">None</option>
-              {mountains.map((m) => (
+              {[...mountains].sort((a, b) => a.name.localeCompare(b.name)).map((m) => (
                 <option key={m.id} value={m.id}>{m.name}</option>
               ))}
             </select>

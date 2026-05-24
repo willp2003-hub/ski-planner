@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import mountains from "../data/mountains.js";
 import MountainIcon from "../components/MountainIcon.jsx";
 
-const STATE_ORDER = ["ME", "NH", "VT", "NY", "NJ", "MA", "PA"];
 const STATE_NAMES = {
   ME: "Maine",
   NH: "New Hampshire",
@@ -30,6 +29,16 @@ function MountainsPage() {
     grouped[m.state].push(m);
   }
 
+  // Sort mountains within each state alphabetically
+  for (const state of Object.keys(grouped)) {
+    grouped[state].sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  // Sort states alphabetically by full name
+  const sortedStates = Object.keys(grouped).sort((a, b) =>
+    (STATE_NAMES[a] || a).localeCompare(STATE_NAMES[b] || b)
+  );
+
   return (
     <div className="mountains-page">
       <h1>All Mountains</h1>
@@ -47,9 +56,9 @@ function MountainsPage() {
           </button>
         )}
       </div>
-      {STATE_ORDER.filter((s) => grouped[s]).map((state) => (
+      {sortedStates.map((state) => (
         <div key={state} className="state-group">
-          <h2>{STATE_NAMES[state]}</h2>
+          <h2>{STATE_NAMES[state] || state}</h2>
           <div className="mountain-list">
             {grouped[state].map((m) => (
               <Link

@@ -74,7 +74,7 @@ function LogSkiDayPage() {
             Resort
             <select value={resortId} onChange={(e) => setResortId(e.target.value)} required>
               <option value="">Select resort...</option>
-              {mountains.map((m) => (
+              {[...mountains].sort((a, b) => a.name.localeCompare(b.name)).map((m) => (
                 <option key={m.id} value={m.id}>{m.name} ({m.state})</option>
               ))}
             </select>
