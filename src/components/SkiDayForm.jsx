@@ -11,6 +11,7 @@ function SkiDayForm({ userId, post, onSave, onClose, userProfile }) {
   const [date, setDate] = useState(post?.date || "");
   const [notes, setNotes] = useState(post?.notes || "");
   const [ratings, setRatings] = useState(post?.ratings || { conditions: 0, crowds: 0, terrain: 0, overall: 0 });
+  const [existingPhotos, setExistingPhotos] = useState(post?.photoUrls || []);
   const [photoFiles, setPhotoFiles] = useState([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -21,7 +22,7 @@ function SkiDayForm({ userId, post, onSave, onClose, userProfile }) {
     setError("");
     try {
       const resort = mountains.find((m) => String(m.id) === String(resortId));
-      let photoUrls = post?.photoUrls || [];
+      let photoUrls = existingPhotos;
 
       if (photoFiles.length > 0) {
         const converted = await Promise.all(photoFiles.map(convertIfHeic));
@@ -90,8 +91,30 @@ function SkiDayForm({ userId, post, onSave, onClose, userProfile }) {
             Notes
             <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} placeholder="How was the day?" />
           </label>
+
+          {existingPhotos.length > 0 && (
+            <div className="existing-photos">
+              <span className="existing-photos-label">Current Photos</span>
+              <div className="existing-photos-grid">
+                {existingPhotos.map((url, i) => (
+                  <div key={i} className="existing-photo-thumb">
+                    <img src={url} alt={`Photo ${i + 1}`} />
+                    <button
+                      type="button"
+                      className="existing-photo-remove"
+                      onClick={() => setExistingPhotos((prev) => prev.filter((_, idx) => idx !== i))}
+                      title="Remove photo"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           <label>
-            Photos
+            {existingPhotos.length > 0 ? "Add More Photos" : "Photos"}
             <input
               type="file"
               accept="image/*"
