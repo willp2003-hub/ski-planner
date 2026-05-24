@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import mountains from "../data/mountains.js";
 import { saveUserProfile } from "../services/firestore.js";
 import { uploadProfilePhoto } from "../services/storage.js";
+import { convertIfHeic } from "../utils/convertHeic.js";
 
 function ProfileForm({ uid, profile, onSave, onClose }) {
   const [displayName, setDisplayName] = useState(profile?.displayName || "");
@@ -20,7 +21,8 @@ function ProfileForm({ uid, profile, onSave, onClose }) {
     try {
       let profilePhotoUrl = profile?.profilePhotoUrl || "";
       if (photoFile) {
-        profilePhotoUrl = await uploadProfilePhoto(uid, photoFile);
+        const converted = await convertIfHeic(photoFile);
+        profilePhotoUrl = await uploadProfilePhoto(uid, converted);
       }
       const data = { displayName, bio, homeResortId, passType, riderType, profilePhotoUrl };
       await saveUserProfile(uid, data);

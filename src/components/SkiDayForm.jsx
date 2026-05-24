@@ -3,6 +3,7 @@ import mountains from "../data/mountains.js";
 import StarRating from "./StarRating.jsx";
 import { createPost, updatePost } from "../services/firestore.js";
 import { uploadPostPhoto } from "../services/storage.js";
+import { convertIfHeic } from "../utils/convertHeic.js";
 
 function SkiDayForm({ userId, post, onSave, onClose, userProfile }) {
   const isEdit = !!post;
@@ -23,9 +24,8 @@ function SkiDayForm({ userId, post, onSave, onClose, userProfile }) {
       let photoUrls = post?.photoUrls || [];
 
       if (photoFiles.length > 0) {
-        const uploads = await Promise.all(
-          photoFiles.map((f) => uploadPostPhoto(userId, f))
-        );
+        const converted = await Promise.all(photoFiles.map(convertIfHeic));
+        const uploads = await Promise.all(converted.map((f) => uploadPostPhoto(userId, f)));
         photoUrls = [...photoUrls, ...uploads];
       }
 

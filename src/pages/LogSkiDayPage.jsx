@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext.jsx";
 import { getUserProfile, createPost } from "../services/firestore.js";
 import { uploadPostPhoto } from "../services/storage.js";
+import { convertIfHeic } from "../utils/convertHeic.js";
 import mountains from "../data/mountains.js";
 import StarRating from "../components/StarRating.jsx";
 
@@ -35,9 +36,8 @@ function LogSkiDayPage() {
       let photoUrls = [];
 
       if (photoFiles.length > 0) {
-        photoUrls = await Promise.all(
-          photoFiles.map((f) => uploadPostPhoto(user.uid, f))
-        );
+        const converted = await Promise.all(photoFiles.map(convertIfHeic));
+        photoUrls = await Promise.all(converted.map((f) => uploadPostPhoto(user.uid, f)));
       }
 
       const data = {
