@@ -2226,6 +2226,72 @@
   color: #1a1a2e;
 }
 
+.feed-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.feed-resort-name {
+  color: #1a1a2e;
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.feed-rating-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.feed-rating-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  color: #aaa;
+  padding: 0 2px;
+  line-height: 1;
+  transition: transform 0.2s, color 0.2s;
+}
+
+.feed-rating-toggle.open {
+  transform: rotate(180deg);
+  color: #555;
+}
+
+.feed-subratings {
+  background: #f8f8f8;
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+}
+
+.feed-body {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.feed-notes {
+  flex: 1;
+  margin-top: 0;
+}
+
+.feed-photo {
+  flex-shrink: 0;
+}
+
+.feed-photo img {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
 /* Result card forecast row */
 .result-forecast {
   margin-top: 5px;
