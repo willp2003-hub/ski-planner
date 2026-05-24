@@ -1,24 +1,26 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { NavLink, Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext.jsx";
 
 function NavBar() {
   const { user } = useAuth();
 
+  const navClass = ({ isActive }) => `nav-link${isActive ? " nav-link-active" : ""}`;
+
   return (
     <nav className="navbar">
       <div className="nav-links">
-        <Link to="/" className="nav-link">Map</Link>
-        <Link to="/feed" className="nav-link">Feed</Link>
+        <NavLink to="/" end className={navClass}>Map</NavLink>
+        <NavLink to="/feed" className={navClass}>Feed</NavLink>
         <Link to={user ? "/log" : "/login"} className="nav-add-btn">
           <span className="nav-add-icon">+</span>
         </Link>
         {user ? (
-          <Link to={`/profile/${user.uid}`} className="nav-link">Profile</Link>
+          <NavLink to={`/profile/${user.uid}`} className={navClass}>Profile</NavLink>
         ) : (
-          <Link to="/login" className="nav-link">Log In</Link>
+          <NavLink to="/login" className={navClass}>Log In</NavLink>
         )}
-        <Link to="/mountains" className="nav-link">Mountains</Link>
+        <NavLink to="/mountains" className={navClass}>Mountains</NavLink>
       </div>
     </nav>
   );
