@@ -32,7 +32,6 @@ const DEFAULT_CENTER = [43.0, -73.5];
 const DEFAULT_ZOOM = 6;
 const TOMORROW_KEY = import.meta.env.VITE_TOMORROW_API_KEY;
 
-// Generate hourly timestamps from now through +6h
 function getForecastTimestamps(n = 6) {
   const now = new Date();
   now.setMinutes(0, 0, 0);
@@ -43,117 +42,20 @@ function getForecastTimestamps(n = 6) {
   });
 }
 
-function fmt24(ts) {
-  const d = new Date(ts * 1000);
-  return d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
-}
-
 function fmtForecastHour(isoStr) {
   const d = new Date(isoStr);
-  return d.toLocaleString("en-US", { weekday: "short", hour: "numeric", hour12: true });
+  return d.toLocaleString("en-US", { weekday: "short", month: "short", day: "numeric", hour: "numeric", hour12: true });
 }
 
 // Snowfall (cm/hr) → circle color
 function snowColor(cm) {
-  if (cm >= 3) return "#5b21b6";   // purple — heavy
-  if (cm >= 1.5) return "#1d4ed8"; // dark blue — moderate-heavy
-  if (cm >= 0.5) return "#38bdf8"; // sky blue — light-moderate
-  return "#bae6fd";                // pale blue — trace
+  if (cm >= 3) return "#5b21b6";
+  if (cm >= 1.5) return "#1d4ed8";
+  if (cm >= 0.5) return "#38bdf8";
+  return "#bae6fd";
 }
 
-// ── Radar overlay (RainViewer tiles) ────────────────────────────────────────
-function RainViewerOverlay({ frames, frameIndex }) {
-  if (frames.length === 0) return null;
-  return (
-    <Pane name="radar" style={{ zIndex: 250 }}>
-      {frames.map((frame, i) => (
-        <TileLayer
-          key={frame.path}
-          url={`https://tilecache.rainviewer.com${frame.path}/256/{z}/{x}/{y}/2/1_1.png`}
-          opacity={i === frameIndex ? 0.65 : 0}
-          attribution={i === frameIndex ? "RainViewer" : ""}
-          pane="radar"
-        />
-      ))}
-    </Pane>
-  );
-}
-
-// ── Forecast overlay (Open-Meteo circles) ───────────────────────────────────
-function ForecastOverlay({ forecastData, hourIndex }) {
-  return (
-    <>
-      {forecastData.map((m) => {
-        const cm = m.hourly[hourIndex] ?? 0;
-        if (cm < 0.1) return null;
-        const inches = cm * 0.393701;
-        const radius = Math.min(8 + inches * 10, 32);
-        const color = snowColor(cm);
-        return (
-          <CircleMarker
-            key={m.id}
-            center={[m.lat, m.lng]}
-            radius={radius}
-            pathOptions={{ color, fillColor: color, fillOpacity: 0.6, weight: 1 }}
-          >
-            <Tooltip direction="top">
-              <strong>{m.name}</strong><br />
-              {inches.toFixed(2)}" expected this hour
-            </Tooltip>
-          </CircleMarker>
-        );
-      })}
-    </>
-  );
-}
-
-// ── Radar timeline bar ───────────────────────────────────────────────────────
-function RadarTimeline({ frames, frameIndex, setFrameIndex, isPlaying, setIsPlaying, pastCount }) {
-  if (frames.length === 0) return null;
-  const isLive = frameIndex >= pastCount;
-  const currentTime = fmt24(frames[frameIndex].time);
-
-  return (
-    <div className="radar-timeline">
-      <button className="radar-play-btn" onClick={() => setIsPlaying((p) => !p)} title={isPlaying ? "Pause" : "Play"}>
-        {isPlaying ? "⏸" : "▶"}
-      </button>
-      <input
-        type="range"
-        className="radar-scrubber"
-        min={0}
-        max={frames.length - 1}
-        value={frameIndex}
-        onChange={(e) => { setIsPlaying(false); setFrameIndex(Number(e.target.value)); }}
-      />
-      <span className="radar-timeline-time">{currentTime}</span>
-      {isLive && <span className="radar-live-badge">LIVE</span>}
-    </div>
-  );
-}
-
-// ── Forecast timeline bar ────────────────────────────────────────────────────
-function ForecastTimeline({ hours, hourIndex, setHourIndex, loading }) {
-  if (loading) return <div className="radar-timeline"><span className="radar-timeline-time">Loading forecast…</span></div>;
-  if (!hours.length) return null;
-
-  return (
-    <div className="radar-timeline">
-      <span className="radar-timeline-label">24h Snow</span>
-      <input
-        type="range"
-        className="radar-scrubber"
-        min={0}
-        max={hours.length - 1}
-        value={hourIndex}
-        onChange={(e) => setHourIndex(Number(e.target.value))}
-      />
-      <span className="radar-timeline-time">{fmtForecastHour(hours[hourIndex])}</span>
-    </div>
-  );
-}
-
-// ── Tomorrow.io forecast radar overlay ──────────────────────────────────────
+// ── Tomorrow.io radar overlay ────────────────────────────────────────────────
 function TomorrowRadarOverlay({ timestamps, tsIndex }) {
   if (!TOMORROW_KEY || timestamps.length === 0) return null;
   return (
@@ -194,6 +96,53 @@ function TomorrowTimeline({ timestamps, tsIndex, setTsIndex, isPlaying, setIsPla
   );
 }
 
+// ── Open-Meteo snowfall circles overlay ─────────────────────────────────────
+function SnowForecastOverlay({ forecastData, hourIndex }) {
+  return (
+    <>
+      {forecastData.map((m) => {
+        const cm = m.hourly[hourIndex] ?? 0;
+        if (cm < 0.1) return null;
+        const inches = cm * 0.393701;
+        const radius = Math.min(8 + inches * 10, 32);
+        const color = snowColor(cm);
+        return (
+          <CircleMarker
+            key={m.id}
+            center={[m.lat, m.lng]}
+            radius={radius}
+            pathOptions={{ color, fillColor: color, fillOpacity: 0.6, weight: 1 }}
+          >
+            <Tooltip direction="top">
+              <strong>{m.name}</strong><br />
+              {inches.toFixed(2)}" expected this hour
+            </Tooltip>
+          </CircleMarker>
+        );
+      })}
+    </>
+  );
+}
+
+function SnowForecastTimeline({ hours, hourIndex, setHourIndex, loading }) {
+  if (loading) return <div className="radar-timeline"><span className="radar-timeline-time">Loading forecast…</span></div>;
+  if (!hours.length) return null;
+  return (
+    <div className="radar-timeline">
+      <span className="radar-timeline-label">7d Snow</span>
+      <input
+        type="range"
+        className="radar-scrubber"
+        min={0}
+        max={hours.length - 1}
+        value={hourIndex}
+        onChange={(e) => setHourIndex(Number(e.target.value))}
+      />
+      <span className="radar-timeline-time">{fmtForecastHour(hours[hourIndex])}</span>
+    </div>
+  );
+}
+
 function FlyToMountain({ mountain, suppressReset }) {
   const map = useMap();
   useEffect(() => {
@@ -211,12 +160,10 @@ function FlyToMountain({ mountain, suppressReset }) {
   return null;
 }
 
-// Fetch hourly snowfall for all mountains, slice to next 24 hours
-async function fetchForecast() {
+// Fetch hourly snowfall for all mountains for the next 7 days
+async function fetchSnowForecast() {
   const now = new Date();
-  // ISO hour string like "2026-05-24T14" to find current hour in response
   const nowHourStr = now.toISOString().slice(0, 13);
-
   const BATCH = 8;
   const results = [];
   for (let i = 0; i < allMountains.length; i += BATCH) {
@@ -224,21 +171,20 @@ async function fetchForecast() {
     const batchResults = await Promise.all(
       batch.map(async (m) => {
         try {
-          const url = `https://api.open-meteo.com/v1/forecast?latitude=${m.latitude}&longitude=${m.longitude}&hourly=snowfall&forecast_days=2&timezone=America/New_York`;
+          const url = `https://api.open-meteo.com/v1/forecast?latitude=${m.latitude}&longitude=${m.longitude}&hourly=snowfall&forecast_days=7&timezone=America/New_York`;
           const res = await fetch(url);
           const data = await res.json();
           const times = data.hourly?.time || [];
           const snowfall = data.hourly?.snowfall || [];
-          // Find start index = current hour (convert Open-Meteo local time to match)
-          let startIdx = times.findIndex((t) => t >= nowHourStr.replace("T", "T").slice(0, 13));
+          let startIdx = times.findIndex((t) => t.slice(0, 13) >= nowHourStr.slice(0, 13));
           if (startIdx < 0) startIdx = 0;
           return {
             id: m.id,
             name: m.name,
             lat: m.latitude,
             lng: m.longitude,
-            hourly: snowfall.slice(startIdx, startIdx + 24),
-            times: times.slice(startIdx, startIdx + 24),
+            hourly: snowfall.slice(startIdx, startIdx + 168),
+            times: times.slice(startIdx, startIdx + 168),
           };
         } catch {
           return { id: m.id, name: m.name, lat: m.latitude, lng: m.longitude, hourly: [], times: [] };
@@ -252,68 +198,26 @@ async function fetchForecast() {
 
 // ── Main map component ───────────────────────────────────────────────────────
 export default function SkiMap({ mountains, onMountainClick, selectedMountain, suppressReset }) {
-  // Radar state
+  // Tomorrow.io radar state
   const [showRadar, setShowRadar] = useState(false);
-  const [frames, setFrames] = useState([]);
-  const [pastCount, setPastCount] = useState(0);
-  const [frameIndex, setFrameIndex] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(true);
-
-  // Open-Meteo snowfall circles state
-  const [showForecast, setShowForecast] = useState(false);
-  const [forecastData, setForecastData] = useState([]);
-  const [forecastHours, setForecastHours] = useState([]);
-  const [hourIndex, setHourIndex] = useState(0);
-  const [forecastLoading, setForecastLoading] = useState(false);
-
-  // Tomorrow.io forecast radar state
-  const [showTomorrow, setShowTomorrow] = useState(false);
   const [tomorrowTimestamps, setTomorrowTimestamps] = useState([]);
   const [tomorrowIndex, setTomorrowIndex] = useState(0);
   const [tomorrowPlaying, setTomorrowPlaying] = useState(false);
 
-  // Load RainViewer radar
-  useEffect(() => {
-    if (!showRadar || frames.length > 0) return;
-    fetch("https://api.rainviewer.com/public/weather-maps.json")
-      .then((r) => r.json())
-      .then((data) => {
-        const past = data.radar?.past || [];
-        const nowcast = data.radar?.nowcast || [];
-        setFrames([...past, ...nowcast]);
-        setPastCount(past.length);
-        setFrameIndex(0);
-        setIsPlaying(true);
-      })
-      .catch(() => {});
-  }, [showRadar]);
-
-  // Animate radar
-  useEffect(() => {
-    if (!isPlaying || frames.length === 0) return;
-    const id = setInterval(() => setFrameIndex((i) => (i + 1) % frames.length), 500);
-    return () => clearInterval(id);
-  }, [isPlaying, frames]);
-
-  // Load 24h forecast
-  useEffect(() => {
-    if (!showForecast || forecastData.length > 0) return;
-    setForecastLoading(true);
-    fetchForecast().then((results) => {
-      setForecastData(results);
-      setForecastHours(results[0]?.times || []);
-      setHourIndex(0);
-      setForecastLoading(false);
-    });
-  }, [showForecast]);
+  // 7-day snowfall circles state
+  const [showSnow, setShowSnow] = useState(false);
+  const [snowData, setSnowData] = useState([]);
+  const [snowHours, setSnowHours] = useState([]);
+  const [snowHourIndex, setSnowHourIndex] = useState(0);
+  const [snowLoading, setSnowLoading] = useState(false);
 
   // Initialize Tomorrow.io timestamps when toggled on
   useEffect(() => {
-    if (!showTomorrow) return;
+    if (!showRadar) return;
     setTomorrowTimestamps(getForecastTimestamps(6));
     setTomorrowIndex(0);
     setTomorrowPlaying(true);
-  }, [showTomorrow]);
+  }, [showRadar]);
 
   // Animate Tomorrow.io scrubber
   useEffect(() => {
@@ -325,22 +229,26 @@ export default function SkiMap({ mountains, onMountainClick, selectedMountain, s
     return () => clearInterval(id);
   }, [tomorrowPlaying, tomorrowTimestamps]);
 
+  // Load 7-day snowfall forecast
+  useEffect(() => {
+    if (!showSnow || snowData.length > 0) return;
+    setSnowLoading(true);
+    fetchSnowForecast().then((results) => {
+      setSnowData(results);
+      setSnowHours(results[0]?.times || []);
+      setSnowHourIndex(0);
+      setSnowLoading(false);
+    });
+  }, [showSnow]);
+
   const toggleRadar = () => {
-    setShowForecast(false);
-    setShowTomorrow(false);
+    setShowSnow(false);
     setShowRadar((v) => !v);
   };
 
-  const toggleForecast = () => {
+  const toggleSnow = () => {
     setShowRadar(false);
-    setShowTomorrow(false);
-    setShowForecast((v) => !v);
-  };
-
-  const toggleTomorrow = () => {
-    setShowRadar(false);
-    setShowForecast(false);
-    setShowTomorrow((v) => !v);
+    setShowSnow((v) => !v);
   };
 
   return (
@@ -350,12 +258,11 @@ export default function SkiMap({ mountains, onMountainClick, selectedMountain, s
           attribution='&copy; <a href="https://www.openstreetmap.org/">OSM</a>'
           url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
         />
-        {showRadar && <RainViewerOverlay frames={frames} frameIndex={frameIndex} />}
-        {showForecast && forecastData.length > 0 && (
-          <ForecastOverlay forecastData={forecastData} hourIndex={hourIndex} />
-        )}
-        {showTomorrow && (
+        {showRadar && (
           <TomorrowRadarOverlay timestamps={tomorrowTimestamps} tsIndex={tomorrowIndex} />
+        )}
+        {showSnow && snowData.length > 0 && (
+          <SnowForecastOverlay forecastData={snowData} hourIndex={snowHourIndex} />
         )}
         <FlyToMountain mountain={selectedMountain} suppressReset={suppressReset} />
         {mountains.map((mountain) => (
@@ -375,45 +282,32 @@ export default function SkiMap({ mountains, onMountainClick, selectedMountain, s
 
       {/* Toggle buttons */}
       <div className="map-overlay-btns">
-        <button className={`radar-toggle-btn${showRadar ? " active" : ""}`} onClick={toggleRadar}>
-          🌨 Radar
-        </button>
-        <button className={`radar-toggle-btn${showForecast ? " active" : ""}`} onClick={toggleForecast}>
-          ⛅ 24h Snow
-        </button>
         {TOMORROW_KEY && (
-          <button className={`radar-toggle-btn${showTomorrow ? " active" : ""}`} onClick={toggleTomorrow}>
-            🌧 Forecast
+          <button className={`radar-toggle-btn${showRadar ? " active" : ""}`} onClick={toggleRadar}>
+            🌨 Radar
           </button>
         )}
+        <button className={`radar-toggle-btn${showSnow ? " active" : ""}`} onClick={toggleSnow}>
+          ⛅ 7d Snow
+        </button>
       </div>
 
       {/* Timelines */}
       {showRadar && (
-        <RadarTimeline
-          frames={frames}
-          frameIndex={frameIndex}
-          setFrameIndex={setFrameIndex}
-          isPlaying={isPlaying}
-          setIsPlaying={setIsPlaying}
-          pastCount={pastCount}
-        />
-      )}
-      {showForecast && (
-        <ForecastTimeline
-          hours={forecastHours}
-          hourIndex={hourIndex}
-          setHourIndex={setHourIndex}
-          loading={forecastLoading}
-        />
-      )}
-      {showTomorrow && (
         <TomorrowTimeline
           timestamps={tomorrowTimestamps}
           tsIndex={tomorrowIndex}
           setTsIndex={setTomorrowIndex}
           isPlaying={tomorrowPlaying}
           setIsPlaying={setTomorrowPlaying}
+        />
+      )}
+      {showSnow && (
+        <SnowForecastTimeline
+          hours={snowHours}
+          hourIndex={snowHourIndex}
+          setHourIndex={setSnowHourIndex}
+          loading={snowLoading}
         />
       )}
     </div>
