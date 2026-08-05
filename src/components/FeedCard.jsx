@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import StarRating from "./StarRating.jsx";
 import PhotoLightbox from "./PhotoLightbox.jsx";
+import HeicSafeImage from "./HeicSafeImage.jsx";
 
 function formatDate(dateStr) {
   if (!dateStr) return "";
@@ -73,7 +74,7 @@ function FeedCard({ post }) {
           {post.notes && <p className="ski-day-notes feed-notes">{post.notes}</p>}
           {post.photoUrls?.length > 0 && (
             <div className="feed-photo">
-              <img
+              <HeicSafeImage
                 src={post.photoUrls[0]}
                 alt="Ski day"
                 className="clickable-photo"

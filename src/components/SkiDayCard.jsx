@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import StarRating from "./StarRating.jsx";
 import PhotoLightbox from "./PhotoLightbox.jsx";
+import HeicSafeImage from "./HeicSafeImage.jsx";
 
 function formatDate(dateStr) {
   if (!dateStr) return "";
@@ -40,7 +41,7 @@ function SkiDayCard({ post, isOwner, onEdit, onDelete }) {
       {post.photoUrls?.length > 0 && (
         <div className="ski-day-photos">
           {post.photoUrls.map((url, i) => (
-            <img
+            <HeicSafeImage
               key={i}
               src={url}
               alt={`Ski day photo ${i + 1}`}
