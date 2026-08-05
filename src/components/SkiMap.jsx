@@ -30,6 +30,18 @@ const createMountainIcon = (size, pass) => {
 
 const DEFAULT_CENTER = [43.0, -73.5];
 const DEFAULT_ZOOM = 6;
+const TOMORROW_KEY = import.meta.env.VITE_TOMORROW_API_KEY;
+
+// Generate hourly timestamps from now through +6h
+function getForecastTimestamps(n = 6) {
+  const now = new Date();
+  now.setMinutes(0, 0, 0);
+  return Array.from({ length: n + 1 }, (_, i) => {
+    const d = new Date(now);
+    d.setHours(d.getHours() + i);
+    return d.toISOString();
+  });
+}
 
 function fmt24(ts) {
   const d = new Date(ts * 1000);
@@ -141,6 +153,47 @@ function ForecastTimeline({ hours, hourIndex, setHourIndex, loading }) {
   );
 }
 
+// ── Tomorrow.io forecast radar overlay ──────────────────────────────────────
+function TomorrowRadarOverlay({ timestamps, tsIndex }) {
+  if (!TOMORROW_KEY || timestamps.length === 0) return null;
+  return (
+    <Pane name="tomorrow-radar" style={{ zIndex: 250 }}>
+      {timestamps.map((ts, i) => (
+        <TileLayer
+          key={ts}
+          url={`https://api.tomorrow.io/v4/map/tile/{z}/{x}/{y}.png?apikey=${TOMORROW_KEY}&layer=precipitationIntensity&timestepMins=60&time=${ts}`}
+          opacity={i === tsIndex ? 0.7 : 0}
+          pane="tomorrow-radar"
+        />
+      ))}
+    </Pane>
+  );
+}
+
+function TomorrowTimeline({ timestamps, tsIndex, setTsIndex, isPlaying, setIsPlaying }) {
+  if (timestamps.length === 0) return null;
+  const label = new Date(timestamps[tsIndex]).toLocaleString("en-US", {
+    weekday: "short", hour: "numeric", hour12: true,
+  });
+  return (
+    <div className="radar-timeline">
+      <button className="radar-play-btn" onClick={() => setIsPlaying((p) => !p)}>
+        {isPlaying ? "⏸" : "▶"}
+      </button>
+      <input
+        type="range"
+        className="radar-scrubber"
+        min={0}
+        max={timestamps.length - 1}
+        value={tsIndex}
+        onChange={(e) => { setIsPlaying(false); setTsIndex(Number(e.target.value)); }}
+      />
+      <span className="radar-timeline-time">{label}</span>
+      {tsIndex === 0 && <span className="radar-live-badge">NOW</span>}
+    </div>
+  );
+}
+
 function FlyToMountain({ mountain, suppressReset }) {
   const map = useMap();
   useEffect(() => {
@@ -206,12 +259,18 @@ export default function SkiMap({ mountains, onMountainClick, selectedMountain, s
   const [frameIndex, setFrameIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
 
-  // Forecast state
+  // Open-Meteo snowfall circles state
   const [showForecast, setShowForecast] = useState(false);
   const [forecastData, setForecastData] = useState([]);
   const [forecastHours, setForecastHours] = useState([]);
   const [hourIndex, setHourIndex] = useState(0);
   const [forecastLoading, setForecastLoading] = useState(false);
+
+  // Tomorrow.io forecast radar state
+  const [showTomorrow, setShowTomorrow] = useState(false);
+  const [tomorrowTimestamps, setTomorrowTimestamps] = useState([]);
+  const [tomorrowIndex, setTomorrowIndex] = useState(0);
+  const [tomorrowPlaying, setTomorrowPlaying] = useState(false);
 
   // Load RainViewer radar
   useEffect(() => {
@@ -248,14 +307,40 @@ export default function SkiMap({ mountains, onMountainClick, selectedMountain, s
     });
   }, [showForecast]);
 
+  // Initialize Tomorrow.io timestamps when toggled on
+  useEffect(() => {
+    if (!showTomorrow) return;
+    setTomorrowTimestamps(getForecastTimestamps(6));
+    setTomorrowIndex(0);
+    setTomorrowPlaying(true);
+  }, [showTomorrow]);
+
+  // Animate Tomorrow.io scrubber
+  useEffect(() => {
+    if (!tomorrowPlaying || tomorrowTimestamps.length === 0) return;
+    const id = setInterval(
+      () => setTomorrowIndex((i) => (i + 1) % tomorrowTimestamps.length),
+      800
+    );
+    return () => clearInterval(id);
+  }, [tomorrowPlaying, tomorrowTimestamps]);
+
   const toggleRadar = () => {
     setShowForecast(false);
+    setShowTomorrow(false);
     setShowRadar((v) => !v);
   };
 
   const toggleForecast = () => {
     setShowRadar(false);
+    setShowTomorrow(false);
     setShowForecast((v) => !v);
+  };
+
+  const toggleTomorrow = () => {
+    setShowRadar(false);
+    setShowForecast(false);
+    setShowTomorrow((v) => !v);
   };
 
   return (
@@ -268,6 +353,9 @@ export default function SkiMap({ mountains, onMountainClick, selectedMountain, s
         {showRadar && <RainViewerOverlay frames={frames} frameIndex={frameIndex} />}
         {showForecast && forecastData.length > 0 && (
           <ForecastOverlay forecastData={forecastData} hourIndex={hourIndex} />
+        )}
+        {showTomorrow && (
+          <TomorrowRadarOverlay timestamps={tomorrowTimestamps} tsIndex={tomorrowIndex} />
         )}
         <FlyToMountain mountain={selectedMountain} suppressReset={suppressReset} />
         {mountains.map((mountain) => (
@@ -293,6 +381,11 @@ export default function SkiMap({ mountains, onMountainClick, selectedMountain, s
         <button className={`radar-toggle-btn${showForecast ? " active" : ""}`} onClick={toggleForecast}>
           ⛅ 24h Snow
         </button>
+        {TOMORROW_KEY && (
+          <button className={`radar-toggle-btn${showTomorrow ? " active" : ""}`} onClick={toggleTomorrow}>
+            🌧 Forecast
+          </button>
+        )}
       </div>
 
       {/* Timelines */}
@@ -312,6 +405,15 @@ export default function SkiMap({ mountains, onMountainClick, selectedMountain, s
           hourIndex={hourIndex}
           setHourIndex={setHourIndex}
           loading={forecastLoading}
+        />
+      )}
+      {showTomorrow && (
+        <TomorrowTimeline
+          timestamps={tomorrowTimestamps}
+          tsIndex={tomorrowIndex}
+          setTsIndex={setTomorrowIndex}
+          isPlaying={tomorrowPlaying}
+          setIsPlaying={setTomorrowPlaying}
         />
       )}
     </div>
